@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프리미엄 QR 코드 생성기</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Noto Sans KR) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- QRCode.js Library (정밀 제어가 가능한 davidshimjs 라이브러리 백업본 사용) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* QR 코드 커스텀 스타일 영역 */
+        #qrcode-container {
+            display: inline-block;
+            padding: 16px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        #qrcode-container img {
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800">
+
+    <!-- 네비게이션 바 -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2 rounded-lg flex items-center justify-center">
+                    <i class="fa-solid fa-qrcode text-xl"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">QR 마스터</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-xs px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-full font-medium">v2.0 Pro</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="flex-grow max-w-6xl w-full mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- 왼쪽: 입력 및 스타일 옵션 (7컬럼) -->
+            <div class="lg:col-span-7 space-y-6">
+                <!-- 1단계: 텍스트/URL 입력 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold">1</span>
+                        <h2 class="text-lg font-bold text-slate-800">QR 코드 내용 입력</h2>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="qr-text" class="block text-sm font-medium text-slate-600 mb-1">URL 또는 텍스트</label>
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-link"></i>
+                                </div>
+                                <input type="text" id="qr-text" 
+                                    class="block w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-800 placeholder-slate-400 shadow-sm transition"
+                                    placeholder="https://example.com 또는 텍스트를 입력하세요" 
+                                    value="https://github.com">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2단계: 디자인 커스터마이징 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <span class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold">2</span>
+                        <h2 class="text-lg font-bold text-slate-800">디자인 커스터마이징</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- 색상 설정 -->
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-2">QR 코드 색상</label>
+                            <div class="flex items-center space-x-3">
+                                <input type="color" id="color-dark" value="#000000" 
+                                    class="w-10 h-10 border-0 rounded-lg cursor-pointer shadow-sm">
+                                <span class="text-xs text-slate-500" id="color-dark-hex">#000000</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-600 mb-2">배경 색상</label>
+                            <div class="flex items-center space-x-3">
+                                <input type="color" id="color-light" value="#ffffff" 
+                                    class="w-10 h-10 border-0 rounded-lg cursor-pointer shadow-sm">
+                                <span class="text-xs text-slate-500" id="color-light-hex">#ffffff</span>
+                            </div>
+                        </div>
+
+                        <!-- 크기 및 복잡도 -->
+                        <div>
+                            <label for="qr-size" class="block text-sm font-medium text-slate-600 mb-1">크기 (px)</label>
+                            <select id="qr-size" class="block w-full py-2.5 px-3 border border-slate-200 bg-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm">
+                                <option value="128">128 x 128</option>
+                                <option value="256" selected>256 x 256</option>
+                                <option value="380">380 x 380</option>
+                                <option value="512">512 x 512</option>
+                            </select>
+                        </div>
+
+                        <!-- 오류 복구 수준 -->
+                        <div>
+                            <label for="qr-correction" class="block text-sm font-medium text-slate-600 mb-1">오류 복구율 (안정성)</label>
+                            <select id="qr-correction" class="block w-full py-2.5 px-3 border border-slate-200 bg-white rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm shadow-sm">
+                                <option value="L">L (약 7% 복구 가능)</option>
+                                <option value="M" selected>M (약 15% 복구 가능)</option>
+                                <option value="Q">Q (약 25% 복구 가능)</option>
+                                <option value="H">H (약 30% 복구 가능 - 권장)</option>
+                            </select>
+                            <p class="text-xxs text-slate-400 mt-1">로고를 추가하거나 인쇄 시 손상이 우려되면 H를 선택하세요.</p>
+                        </div>
+                    </div>
+
+                    <!-- 워터마크/중앙 로고 이모지 추가 (CSS 오버레이 방식) -->
+                    <div class="mt-6 pt-6 border-t border-slate-100">
+                        <label class="block text-sm font-medium text-slate-600 mb-2">중앙 아이콘 선택 (선택 사항)</label>
+                        <div class="grid grid-cols-6 gap-2" id="logo-selectors">
+                            <button type="button" data-icon="" class="logo-btn active py-2 border-2 border-indigo-500 bg-indigo-50 rounded-lg text-xs font-semibold text-indigo-700">없음</button>
+                            <button type="button" data-icon="🔗" class="logo-btn py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-lg">🔗</button>
+                            <button type="button" data-icon="🏠" class="logo-btn py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-lg">🏠</button>
+                            <button type="button" data-icon="❤️" class="logo-btn py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-lg">❤️</button>
+                            <button type="button" data-icon="🔥" class="logo-btn py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-lg">🔥</button>
+                            <button type="button" data-icon="🎁" class="logo-btn py-2 border border-slate-200 hover:bg-slate-50 rounded-lg text-lg">🎁</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 생성 버튼 -->
+                <button id="generate-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md hover:shadow-lg transition flex items-center justify-center space-x-2 text-lg">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>QR 코드 실시간 생성하기</span>
+                </button>
+            </div>
+
+            <!-- 오른쪽: QR 코드 미리보기 및 다운로드 (5컬럼) -->
+            <div class="lg:col-span-5 space-y-6">
+                <!-- 미리보기 판넬 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center justify-center text-center">
+                    <h2 class="text-lg font-bold text-slate-800 mb-6 self-start flex items-center space-x-2">
+                        <i class="fa-solid fa-eye text-indigo-500"></i>
+                        <span>실시간 미리보기</span>
+                    </h2>
+
+                    <!-- QR 코드가 생성되는 컨테이너 -->
+                    <div class="relative p-6 bg-slate-50 border border-dashed border-slate-200 rounded-2xl flex items-center justify-center min-h-[300px] w-full" id="qr-wrapper">
+                        <!-- QR 코드 렌더 영역 -->
+                        <div id="qrcode-container" class="relative transition-all duration-300 transform hover:scale-105">
+                            <div id="qrcode"></div>
+                            <!-- 중앙 로고 오버레이 -->
+                            <div id="qr-logo-overlay" class="absolute inset-0 m-auto w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md text-xl hidden border-2 border-slate-100">
+                                <span id="logo-char"></span>
+                            </div>
+                        </div>
+
+                        <!-- 로딩 표시용 (숨김 기본) -->
+                        <div id="qr-loading" class="absolute inset-0 bg-white/80 rounded-2xl flex flex-col items-center justify-center hidden">
+                            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-2"></div>
+                            <span class="text-sm text-slate-500">새로운 QR 생성 중...</span>
+                        </div>
+                    </div>
+
+                    <!-- 다운로드 버튼 세트 -->
+                    <div class="w-full mt-6 space-y-3">
+                        <button id="download-png" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-medium py-3 px-4 rounded-xl shadow transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-file-arrow-down"></i>
+                            <span>이미지 저장 (PNG)</span>
+                        </button>
+                        
+                        <div class="flex space-x-2">
+                            <button id="copy-clipboard" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium py-2.5 px-4 rounded-xl transition text-sm flex items-center justify-center space-x-1.5">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>복사하기</span>
+                            </button>
+                            <button id="print-qr" class="flex-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-medium py-2.5 px-4 rounded-xl transition text-sm flex items-center justify-center space-x-1.5">
+                                <i class="fa-solid fa-print"></i>
+                                <span>바로 인쇄</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 알림 피드백 모달 대용 토스트 알림창 -->
+                <div id="toast-message" class="fixed bottom-6 right-6 bg-slate-900 text-white px-5 py-3 rounded-xl shadow-lg flex items-center space-x-2 transition transform translate-y-20 opacity-0 pointer-events-none z-50">
+                    <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                    <span id="toast-text" class="text-sm font-medium">성공적으로 처리되었습니다.</span>
+                </div>
+
+                <!-- 이력 관리 세션 -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-history text-slate-400"></i>
+                            <span>최근 생성 이력</span>
+                        </h2>
+                        <button id="clear-history" class="text-xs text-rose-500 hover:underline">모두 삭제</button>
+                    </div>
+                    <ul id="history-list" class="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                        <!-- 동적으로 로딩되는 히스토리 목록 -->
+                        <li class="text-xs text-slate-400 text-center py-4" id="history-empty">생성된 QR 코드 이력이 없습니다.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="bg-slate-900 text-slate-400 py-8 border-t border-slate-800 mt-12">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-sm">© 2026 QR 마스터. 모든 QR 코드는 사용자의 브라우저 내에서 안전하게 생성되며 외부로 유출되지 않습니다.</p>
+        </div>
+    </footer>
+
+    <!-- 클라이언트 사이드 스크립트 -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM 요소 선택
+            const qrTextInput = document.getElementById('qr-text');
+            const colorDarkInput = document.getElementById('color-dark');
+            const colorLightInput = document.getElementById('color-light');
+            const colorDarkHex = document.getElementById('color-dark-hex');
+            const colorLightHex = document.getElementById('color-light-hex');
+            const qrSizeSelect = document.getElementById('qr-size');
+            const qrCorrectionSelect = document.getElementById('qr-correction');
+            const generateBtn = document.getElementById('generate-btn');
+            const qrcodeDiv = document.getElementById('qrcode');
+            const logoBtns = document.querySelectorAll('.logo-btn');
+            
+            // 중앙 오버레이 아이콘 관련
+            const logoOverlay = document.getElementById('qr-logo-overlay');
+            const logoChar = document.getElementById('logo-char');
+
+            // 기능 액션 버튼
+            const downloadPngBtn = document.getElementById('download-png');
+            const copyClipboardBtn = document.getElementById('copy-clipboard');
+            const printQrBtn = document.getElementById('print-qr');
+            
+            // 토스트 알림 관련
+            const toast = document.getElementById('toast-message');
+            const toastText = document.getElementById('toast-text');
+
+            // 히스토리 관련
+            const historyList = document.getElementById('history-list');
+            const historyEmpty = document.getElementById('history-empty');
+            const clearHistoryBtn = document.getElementById('clear-history');
+
+            let qrcodeInstance = null;
+            let currentLogo = '';
+            let qrHoldingData = []; // 세션 기록 저장소
+
+            // 컬러 피커 디스플레이 업데이트
+            colorDarkInput.addEventListener('input', (e) => {
+                colorDarkHex.textContent = e.target.value.toUpperCase();
+                debounceGenerate();
+            });
+
+            colorLightInput.addEventListener('input', (e) => {
+                colorLightHex.textContent = e.target.value.toUpperCase();
+                debounceGenerate();
+            });
+
+            // 입력 상자 실시간 생성 바인딩
+            qrTextInput.addEventListener('input', debounceGenerate);
+            qrSizeSelect.addEventListener('change', generateQR);
+            qrCorrectionSelect.addEventListener('change', generateQR);
+
+            // 로고 선택 처리
+            logoBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    logoBtns.forEach(b => b.classList.remove('active', 'border-indigo-500', 'bg-indigo-50', 'text-indigo-700'));
+                    logoBtns.forEach(b => b.classList.add('border-slate-200', 'hover:bg-slate-50'));
+
+                    btn.classList.add('active', 'border-indigo-500', 'bg-indigo-50', 'text-indigo-700');
+                    btn.classList.remove('border-slate-200', 'hover:bg-slate-50');
+
+                    currentLogo = btn.getAttribute('data-icon');
+                    updateLogoOverlay();
+                    generateQR();
+                });
+            });
+
+            // 오버레이 아이콘 디스플레이 조정
+            function updateLogoOverlay() {
+                if (currentLogo) {
+                    logoChar.textContent = currentLogo;
+                    logoOverlay.classList.remove('hidden');
+                } else {
+                    logoOverlay.classList.add('hidden');
+                }
+            }
+
+            // 디바운스 기능 (입력 시 너무 잦은 새로고침 방지)
+            let debounceTimer;
+            function debounceGenerate() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(generateQR, 300);
+            }
+
+            // QR 코드 생성 핵심 함수
+            function generateQR() {
+                const text = qrTextInput.value.trim();
+                if (!text) {
+                    // 비어있을 때는 비워둠
+                    qrcodeDiv.innerHTML = "<div class='text-slate-400 text-sm'>텍스트를 입력하면 즉시 QR이 보입니다.</div>";
+                    logoOverlay.classList.add('hidden');
+                    return;
+                }
+
+                // 기존 영역 정리
+                qrcodeDiv.innerHTML = "";
+
+                const size = parseInt(qrSizeSelect.value);
+                const correctionMap = {
+                    'L': QRCode.CorrectLevel.L,
+                    'M': QRCode.CorrectLevel.M,
+                    'Q': QRCode.CorrectLevel.Q,
+                    'H': QRCode.CorrectLevel.H
+                };
+
+                try {
+                    // qrcode.js 인스턴스 재생성
+                    qrcodeInstance = new QRCode(qrcodeDiv, {
+                        text: text,
+                        width: size,
+                        height: size,
+                        colorDark: colorDarkInput.value,
+                        colorLight: colorLightInput.value,
+                        correctLevel: correctionMap[qrCorrectionSelect.value]
+                    });
+
+                    // 중앙 로고 오버레이를 QR 사이즈에 맞게 조절
+                    if (currentLogo) {
+                        logoOverlay.classList.remove('hidden');
+                        const relativeSize = Math.max(28, Math.min(64, size * 0.16));
+                        logoOverlay.style.width = `${relativeSize}px`;
+                        logoOverlay.style.height = `${relativeSize}px`;
+                        logoOverlay.style.fontSize = `${relativeSize * 0.55}px`;
+                    }
+
+                    // 히스토리에 기록 (중복 방지)
+                    addHistory(text);
+
+                } catch (error) {
+                    console.error("QR Code generation failed:", error);
+                }
+            }
+
+            // 수동 생성 버튼 이벤트
+            generateBtn.addEventListener('click', () => {
+                generateQR();
+                showToast("새로운 QR 코드가 생성되었습니다!");
+            });
+
+            // 토스트 알림창 띄우기
+            function showToast(message) {
+                toastText.textContent = message;
+                toast.classList.remove('opacity-0', 'translate-y-20', 'pointer-events-none');
+                toast.classList.add('opacity-100', 'translate-y-0');
+
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100', 'translate-y-0');
+                    toast.classList.add('opacity-0', 'translate-y-20', 'pointer-events-none');
+                }, 2500);
+            }
+
+            // 이미지 다운로드 기능 (로고가 포함된 캔버스 캡처본 제작)
+            downloadPngBtn.addEventListener('click', () => {
+                const qrImg = qrcodeDiv.querySelector('img');
+                if (!qrImg) {
+                    showToast("먼저 QR 코드를 완성해 주세요.");
+                    return;
+                }
+
+                // 고품질 이미지 렌더링을 위해 가상 캔버스 기법 사용 (오버레이 아이콘 합성 포함)
+                const finalCanvas = document.createElement('canvas');
+                const ctx = finalCanvas.getContext('2d');
+                const size = parseInt(qrSizeSelect.value);
+                
+                finalCanvas.width = size;
+                finalCanvas.height = size;
+
+                const baseImg = new Image();
+                baseImg.onload = function() {
+                    // QR 베이스 그리기
+                    ctx.drawImage(baseImg, 0, 0, size, size);
+
+                    // 로고 아이콘이 존재할 시 중앙 합성
+                    if (currentLogo) {
+                        const iconSize = size * 0.18;
+                        const iconX = (size - iconSize) / 2;
+                        const iconY = (size - iconSize) / 2;
+                        
+                        // 하얀 배경 서클 그리기
+                        ctx.beginPath();
+                        ctx.arc(size/2, size/2, iconSize/2, 0, 2 * Math.PI);
+                        ctx.fillStyle = "#ffffff";
+                        ctx.fill();
+                        ctx.lineWidth = size * 0.01;
+                        ctx.strokeStyle = "#e2e8f0";
+                        ctx.stroke();
+
+                        // 이모지 텍스트 입히기
+                        ctx.fillStyle = "#000000";
+                        ctx.font = `bold ${iconSize * 0.6}px 'Noto Sans KR'`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(currentLogo, size/2, size/2 + (iconSize * 0.05)); // 오프셋 미세보정
+                    }
+
+                    // 다운로드 스트림 트리거
+                    try {
+                        const dataUrl = finalCanvas.toDataURL("image/png");
+                        const link = document.createElement('a');
+                        link.download = `qrcode_${Date.now()}.png`;
+                        link.href = dataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        showToast("QR 코드가 이미지(PNG)로 저장되었습니다.");
+                    } catch(e) {
+                        // iframe 보안 이슈 대비 클립보드 대체
+                        showToast("다운로드 권한 오류가 발생해 화면을 복사해 사용해주세요.");
+                    }
+                };
+                baseImg.src = qrImg.src;
+            });
+
+            // 복사하기 기능 (navigator 대체형 execCommand 호환성 유지)
+            copyClipboardBtn.addEventListener('click', () => {
+                const text = qrTextInput.value;
+                const tempInput = document.createElement('input');
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("QR 타겟 URL/텍스트가 복사되었습니다!");
+                } catch (err) {
+                    showToast("복사 기능에 실패했습니다.");
+                }
+                document.body.removeChild(tempInput);
+            });
+
+            // 바로 인쇄 기능
+            printQrBtn.addEventListener('click', () => {
+                const qrImg = qrcodeDiv.querySelector('img');
+                if (!qrImg) {
+                    showToast("인쇄할 QR 코드가 없습니다.");
+                    return;
+                }
+
+                // 인쇄용 미니 팝업창 띄우기
+                const printWindow = window.open('', '_blank', 'width=600,height=600');
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>QR Code Print</title>
+                        <style>
+                            body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; }
+                            img { max-width: 80%; border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+                            h2 { margin-bottom: 20px; color: #333; }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>QR 마스터 생성 코드</h2>
+                        <img src="${qrImg.src}" />
+                        <script>
+                            window.onload = function() {
+                                window.print();
+                                setTimeout(() => { window.close(); }, 500);
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+                printWindow.document.close();
+            });
+
+            // 이력 저장 및 로드 관리 (중복 제거)
+            function addHistory(text) {
+                if (!text || qrHoldingData.includes(text)) return;
+
+                qrHoldingData.unshift(text); // 최신 생성순 정렬
+                if (qrHoldingData.length > 5) {
+                    qrHoldingData.pop(); // 최대 5개 저장
+                }
+
+                updateHistoryDOM();
+            }
+
+            function updateHistoryDOM() {
+                if (qrHoldingData.length === 0) {
+                    historyEmpty.classList.remove('hidden');
+                    return;
+                }
+
+                historyEmpty.classList.add('hidden');
+                
+                // 히스토리 항목 리빌딩
+                const itemsHtml = qrHoldingData.map((data, index) => {
+                    const cleanData = data.length > 28 ? data.substring(0, 25) + '...' : data;
+                    return `
+                        <li class="group flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/50 transition cursor-pointer" data-text="${data}">
+                            <div class="flex items-center space-x-2 overflow-hidden mr-2">
+                                <i class="fa-solid fa-link text-slate-400 group-hover:text-indigo-500 text-xs"></i>
+                                <span class="text-xs font-medium text-slate-600 truncate">${cleanData}</span>
+                            </div>
+                            <button class="history-apply text-xxs bg-slate-200 group-hover:bg-indigo-600 text-slate-600 group-hover:text-white px-2 py-1 rounded transition">적용</button>
+                        </li>
+                    `;
+                }).join('');
+
+                // 리스트 교체 (지워질 것을 비워둔 후 대입)
+                const itemsElements = document.querySelectorAll('#history-list li:not(#history-empty)');
+                itemsElements.forEach(el => el.remove());
+                historyList.insertAdjacentHTML('beforeend', itemsHtml);
+
+                // 클릭 리스너 바인딩
+                document.querySelectorAll('#history-list li:not(#history-empty)').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const selectedText = item.getAttribute('data-text');
+                        qrTextInput.value = selectedText;
+                        generateQR();
+                        showToast("이전 QR 코드를 불러왔습니다.");
+                    });
+                });
+            }
+
+            // 이력 초기화
+            clearHistoryBtn.addEventListener('click', () => {
+                qrHoldingData = [];
+                updateHistoryDOM();
+                historyEmpty.classList.remove('hidden');
+                showToast("생성 이력이 초기화되었습니다.");
+            });
+
+            // 초기 실행
+            generateQR();
+        });
+    </script>
+</body>
+</html>
